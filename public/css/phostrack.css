@@ -1,0 +1,44 @@
+:root {
+    --phos-nav: #123F33;
+    --phos-primary: #1B5E4B;
+    --phos-primary-light: #2A7B63;
+    --phos-accent: #E07B1F;
+    --phos-exploitation: #FBE8D3;
+    --phos-expansion: #DCEEE7;
+    --phos-exploitee: #DFE3E7;
+    --phos-phosphate: #C9A24B;
+    --phos-sterile: #8A7F72;
+    --phos-charbon: #2B2B2E;
+
+    --bs-primary: #1B5E4B;
+    --bs-primary-rgb: 27, 94, 75;
+    --bs-warning: #E07B1F;
+    --bs-warning-rgb: 224, 123, 31;
+    --bs-body-bg: #F4F6F5;
+}
+
+.btn-primary {
+    --bs-btn-bg: #1B5E4B;
+    --bs-btn-border-color: #1B5E4B;
+    --bs-btn-hover-bg: #123F33;
+    --bs-btn-hover-border-color: #123F33;
+    --bs-btn-active-bg: #0E3228;
+    --bs-btn-active-border-color: #0E3228;
+}
+
+.btn-warning {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #E07B1F;
+    --bs-btn-border-color: #E07B1F;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #C46A15;
+    --bs-btn-hover-border-color: #C46A15;
+}
+
+.bg-phos-nav { background-color: var(--phos-nav) !important; }
+
+.navbar .nav-link.active {
+    background-color: var(--phos-primary-light);
+    border-radius: .4rem;
+    color: #fff !important;
+}

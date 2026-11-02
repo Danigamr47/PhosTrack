@@ -11,7 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     {{-- Styles PhosTrack (couleurs de la charte) --}}
-    <link href="{{ asset('css/phostrack.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/phostrack.css') }}?v={{ filemtime(public_path('css/phostrack.css')) }}" rel="stylesheet">
     @stack('styles')
 </head>
 <body class="bg-light">
