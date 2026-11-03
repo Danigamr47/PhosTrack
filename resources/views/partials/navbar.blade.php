@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('dashboard') }}">
-            <span class="rounded px-2 fw-bold text-white" style="background: var(--phos-accent)">P</span>
+            <span class="rounded px-2 fw-bold text-white" style="background: var(--phos-alerte)">P</span>
             <span class="lh-1">PhosTrack<br><small class="fw-normal opacity-75" style="font-size:.65rem">WebSIG ICS</small></span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
@@ -25,6 +25,10 @@
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('stocks.*') ? 'active' : '' }}"
                     href="{{ route('stocks.index') }}">Stocks</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('leves.*') ? 'active' : '' }}"
+                    href="{{ route('leves.index') }}">Levés</a>
                 </li>
 
                 @if (auth()->user()->aLeRole(\App\Enums\Role::Administrateur))

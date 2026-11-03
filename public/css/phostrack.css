@@ -1,44 +1,162 @@
+/* PhosTrack — charte graphique */
 :root {
-    --phos-nav: #123F33;
-    --phos-primary: #1B5E4B;
-    --phos-primary-light: #2A7B63;
-    --phos-accent: #E07B1F;
-    --phos-exploitation: #FBE8D3;
-    --phos-expansion: #DCEEE7;
-    --phos-exploitee: #DFE3E7;
+    /* Primaire — vert phosphate */
+    --phos-primary-700: #123F33;
+    --phos-primary-600: #1B5E4B;
+    --phos-primary-500: #2A7B63;
+    --phos-primary-100: #DCEEE7;
+
+    /* Accent — jaune sécurité */
+    --phos-accent-500: #F2A900;
+    --phos-accent-100: #FDF2CC;
+
+    /* Neutres */
+    --phos-neutre-900: #1F2933;
+    --phos-neutre-700: #3E4C59;
+    --phos-neutre-500: #7B8794;
+    --phos-neutre-300: #D9DEE3;
+    --phos-neutre-100: #F4F6F5;
+    --phos-neutre-0: #FFFFFF;
+
+    /* Statuts */
+    --phos-succes: #2E9E6B;
+    --phos-alerte: #E07B1F;
+    --phos-danger: #D64545;
+    --phos-info: #2F7DB5;
+
+    /* Matériaux (couches de la carte) */
     --phos-phosphate: #C9A24B;
     --phos-sterile: #8A7F72;
     --phos-charbon: #2B2B2E;
 
-    --bs-primary: #1B5E4B;
-    --bs-primary-rgb: 27, 94, 75;
-    --bs-warning: #E07B1F;
-    --bs-warning-rgb: 224, 123, 31;
+    /* Zones de la carte */
+    --phos-zone-exploitee: #DFE3E7;
+    --phos-zone-exploitation: #FBE8D3;
+    --phos-zone-expansion: #DCEEE7;
+
+    /* Alias utilisés par les vues existantes */
+    --phos-nav: var(--phos-primary-700);
+    --phos-primary: var(--phos-primary-600);
+    --phos-primary-light: var(--phos-primary-500);
+    --phos-accent: var(--phos-accent-500);
+    --phos-expansion: var(--phos-primary-100);
+
+    /* Surcharge des variables Bootstrap */
+    --bs-primary: #1B5E4B;      --bs-primary-rgb: 27, 94, 75;
+    --bs-success: #2E9E6B;      --bs-success-rgb: 46, 158, 107;
+    --bs-warning: #F2A900;      --bs-warning-rgb: 242, 169, 0;
+    --bs-danger:  #D64545;      --bs-danger-rgb: 214, 69, 69;
+    --bs-info:    #2F7DB5;      --bs-info-rgb: 47, 125, 181;
+
+    --bs-body-font-size: .875rem;            /* Corps : 14 / Regular */
+    --bs-body-color: #1F2933;
+    --bs-body-color-rgb: 31, 41, 51;
     --bs-body-bg: #F4F6F5;
+    --bs-body-bg-rgb: 244, 246, 245;
+    --bs-border-color: #D9DEE3;
+    --bs-secondary-color: #7B8794;
+    --bs-link-color: #1B5E4B;
+    --bs-link-hover-color: #123F33;
 }
 
-.btn-primary {
-    --bs-btn-bg: #1B5E4B;
-    --bs-btn-border-color: #1B5E4B;
-    --bs-btn-hover-bg: #123F33;
-    --bs-btn-hover-border-color: #123F33;
-    --bs-btn-active-bg: #0E3228;
-    --bs-btn-active-border-color: #0E3228;
-}
+/* Typographie : Titre 1 = 32/Bold, Titre 2 = 24/SemiBold, Titre 3 = 18/SemiBold, Légende = 12 */
+h1, .h1 { font-size: 2rem; font-weight: 700; }
+h2, .h2 { font-size: 1.5rem; font-weight: 600; }
+.h4 { font-size: 1.5rem; font-weight: 600; }
+.h5, .h6 { font-size: 1.125rem; font-weight: 600; }
+small, .small, .form-text { font-size: .75rem; }
 
-.btn-warning {
-    --bs-btn-color: #fff;
-    --bs-btn-bg: #E07B1F;
-    --bs-btn-border-color: #E07B1F;
-    --bs-btn-hover-color: #fff;
-    --bs-btn-hover-bg: #C46A15;
-    --bs-btn-hover-border-color: #C46A15;
-}
-
+/* Barre de menu */
 .bg-phos-nav { background-color: var(--phos-nav) !important; }
-
 .navbar .nav-link.active {
-    background-color: var(--phos-primary-light);
-    border-radius: .4rem;
+    background-color: var(--phos-primary-500);
+    border-radius: .5rem;
     color: #fff !important;
 }
+
+/* Cartes */
+.card {
+    border: 1px solid var(--phos-neutre-300);
+    border-radius: .75rem;
+    box-shadow: none !important;
+}
+
+/* Boutons : Principal / Secondaire / Accent / Supprimer */
+.btn { font-weight: 600; border-radius: .5rem; }
+
+.btn-primary {
+    --bs-btn-bg: #1B5E4B; --bs-btn-border-color: #1B5E4B;
+    --bs-btn-hover-bg: #123F33; --bs-btn-hover-border-color: #123F33;
+    --bs-btn-active-bg: #0E3228; --bs-btn-active-border-color: #0E3228;
+}
+.btn-outline-primary {
+    --bs-btn-color: #1B5E4B; --bs-btn-border-color: #1B5E4B;
+    --bs-btn-hover-bg: #1B5E4B; --bs-btn-hover-border-color: #1B5E4B; --bs-btn-hover-color: #fff;
+    --bs-btn-active-bg: #123F33; --bs-btn-active-border-color: #123F33; --bs-btn-active-color: #fff;
+}
+.btn-warning {
+    --bs-btn-color: #1F2933; --bs-btn-bg: #F2A900; --bs-btn-border-color: #F2A900;
+    --bs-btn-hover-color: #1F2933; --bs-btn-hover-bg: #D99500; --bs-btn-hover-border-color: #D99500;
+}
+.btn-danger {
+    --bs-btn-bg: #D64545; --bs-btn-border-color: #D64545;
+    --bs-btn-hover-bg: #B83A3A; --bs-btn-hover-border-color: #B83A3A;
+}
+.btn-outline-danger {
+    --bs-btn-color: #D64545; --bs-btn-border-color: #D64545;
+    --bs-btn-hover-bg: #D64545; --bs-btn-hover-border-color: #D64545;
+}
+
+/* Badges : Actif / Alerte / Désactivé (pastilles claires de la charte) */
+.badge { font-weight: 600; border-radius: 999px; padding: .4em .75em; }
+.badge.text-bg-success   { background-color: var(--phos-primary-100) !important; color: var(--phos-primary-600) !important; }
+.badge.text-bg-warning   { background-color: var(--phos-accent-100) !important;  color: #9A6B00 !important; }
+.badge.text-bg-secondary { background-color: #E8EBEE !important; color: var(--phos-neutre-700) !important; }
+
+/* Formulaires et tableaux */
+.form-control, .form-select { border-radius: .5rem; border-color: var(--phos-neutre-300); }
+.form-control:focus, .form-select:focus {
+    border-color: var(--phos-primary-500);
+    box-shadow: 0 0 0 .2rem rgba(42, 123, 99, .2);
+}
+.form-check-input:checked { background-color: var(--phos-primary-600); border-color: var(--phos-primary-600); }
+.table-light { --bs-table-bg: var(--phos-neutre-100); }
+
+/* Étapes du levé */
+.etapes { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.etape { display: flex; align-items: center; gap: .5rem; font-weight: 600; color: var(--phos-neutre-500); }
+.etape .pastille {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .75rem; background: var(--phos-neutre-300); color: var(--phos-neutre-700);
+}
+.etape.active { color: var(--phos-neutre-900); }
+.etape.active .pastille, .etape.fait .pastille { background: var(--phos-primary-600); color: #fff; }
+.etape.fait { color: var(--phos-primary-600); }
+.etape-trait { width: 32px; height: 2px; background: var(--phos-neutre-300); }
+
+/* Zones de dépôt de fichiers */
+.zone-depot {
+    display: block; border: 2px dashed var(--phos-neutre-300); border-radius: .75rem;
+    padding: 1.75rem 1rem; text-align: center; cursor: pointer; transition: .15s;
+    color: var(--phos-neutre-700);
+}
+.zone-depot:hover, .zone-depot.survol { border-color: var(--phos-primary-500); background: var(--phos-primary-100); }
+.zone-depot.desactive { opacity: .6; cursor: not-allowed; background: var(--phos-neutre-100); }
+.fichier-charge { background: var(--phos-neutre-100); border: 1px solid var(--phos-neutre-300); border-radius: .5rem; }
+.icone-fichier {
+    width: 36px; height: 36px; border-radius: .5rem; display: inline-flex;
+    align-items: center; justify-content: center; font-size: .7rem; font-weight: 700;
+    background: var(--phos-primary-100); color: var(--phos-primary-600);
+}
+.point-controle { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: .5rem; background: var(--phos-succes); }
+.point-controle.alerte { background: var(--phos-alerte); }
+
+/* Récapitulatif */
+.recap li { display: flex; gap: .75rem; align-items: flex-start; padding: .5rem 0; }
+.recap .pastille-recap {
+    width: 20px; height: 20px; flex: none; border-radius: 50%; margin-top: 2px;
+    display: inline-flex; align-items: center; justify-content: center; font-size: .7rem;
+    border: 2px solid var(--phos-neutre-300); color: #fff;
+}
+.recap .pastille-recap.ok { background: var(--phos-succes); border-color: var(--phos-succes); }
