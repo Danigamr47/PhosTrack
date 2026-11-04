@@ -1,11 +1,12 @@
 <?php
 
 use App\Http\Controllers\Admin\JournalController;
-use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\TypeMateriauController;
-use App\Http\Controllers\StockController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CarteController;
 use App\Http\Controllers\LeveController;
 use App\Http\Controllers\LevePointsController;
+use App\Http\Controllers\StockController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
@@ -13,30 +14,30 @@ Route::redirect('/', '/login');
 Route::middleware(['auth', 'actif'])->group(function () {
 
     Route::view('/dashboard', 'dashboard')->name('dashboard');
-    Route::get('/journal', [JournalController::class, 'index'])->name('journal.index');
 
-    // Consultation : tous les rôles
-    Route::get('stocks', [StockController::class, 'index'])->name('stocks.index');
+    Route::get('/carte', [CarteController::class, 'index'])->name('carte');
+    Route::get('/carte/donnees', [CarteController::class, 'donnees'])->name('carte.donnees');
 
-    // Gestion : Technicien uniquement
+    // Gestion : Technicien uniquement (déclaré AVANT les routes show, pour que /create ne soit pas capturé par {leve})
     Route::middleware('role:technicien')->group(function () {
-    Route::resource('leves', LeveController::class)
-        ->parameters(['leves' => 'leve'])
+        Route::resource('leves', LeveController::class)
+            ->parameters(['leves' => 'leve'])
             ->except(['index', 'show']);
-    Route::post('leves/{leve}/points/{type}', [LevePointsController::class, 'store'])
-    ->name('leves.points.store')->where('type', 'pied|semis');
-    Route::delete('leves/{leve}/points/{type}', [LevePointsController::class, 'destroy'])
-        ->name('leves.points.destroy')->where('type', 'pied|semis');
-    Route::post('leves/{leve}/calcul', [LeveController::class, 'calculer'])->name('leves.calcul');
-    Route::post('leves/{leve}/validation', [LeveController::class, 'valider'])->name('leves.valider');
+        Route::post('leves/{leve}/points/{type}', [LevePointsController::class, 'store'])
+            ->name('leves.points.store')->where('type', 'pied|semis');
+        Route::delete('leves/{leve}/points/{type}', [LevePointsController::class, 'destroy'])
+            ->name('leves.points.destroy')->where('type', 'pied|semis');
+        Route::post('leves/{leve}/calcul', [LeveController::class, 'calculer'])->name('leves.calcul');
+        Route::post('leves/{leve}/validation', [LeveController::class, 'valider'])->name('leves.valider');
+
+        Route::resource('stocks', StockController::class)->except(['index', 'show']);
     });
 
+    // Consultation : tous les rôles
     Route::resource('leves', LeveController::class)
         ->parameters(['leves' => 'leve'])
         ->only(['index', 'show']);
-    Route::middleware('role:technicien')->group(function () {
-        Route::resource('stocks', StockController::class)->except(['index', 'show']);
-    });
+    Route::get('stocks', [StockController::class, 'index'])->name('stocks.index');
 
     // Espace réservé à l'Administrateur
     Route::middleware('role:administrateur')->prefix('admin')->name('admin.')->group(function () {
@@ -45,10 +46,12 @@ Route::middleware(['auth', 'actif'])->group(function () {
             ->except(['show', 'destroy']);
         Route::patch('utilisateurs/{user}/statut', [UserController::class, 'basculerStatut'])
             ->name('utilisateurs.statut');
-        
+
         Route::resource('types-materiau', TypeMateriauController::class)
             ->parameters(['types-materiau' => 'type'])
             ->except(['show', 'create']);
+
+        Route::get('journal', [JournalController::class, 'index'])->name('journal.index');
     });
 });
 

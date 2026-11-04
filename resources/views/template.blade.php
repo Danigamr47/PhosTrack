@@ -45,6 +45,7 @@
 </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset('js/phostrack.js') }}?v={{ filemtime(public_path('js/phostrack.js')) }}"></script>
     @stack('scripts')
 </body>
 </html>

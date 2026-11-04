@@ -136,11 +136,11 @@
                     {{ $leve->volume !== null ? 'Recalculer le volume' : 'Calculer le volume' }}
                 </button>
             @else
-                <button type="button" class="btn btn-primary" disabled>Calculer le volume</button>
+                <button type="button" class="btn btn-primary" disabled data-chargement="Calcul en cours…" >Calculer le volume</button>
             @endif
 
             @if ($leve && $leve->statut === \App\Enums\StatutLeve::Calcule)
-                <button type="submit" form="form-validation" class="btn btn-primary"
+                <button type="submit" form="form-validation" class="btn btn-primary" data-chargement="Validation…"
                         onclick="return confirm('Valider ce levé ? Il ne pourra plus être modifié.')">
                     Valider et enregistrer le levé
                 </button>

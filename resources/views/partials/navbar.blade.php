@@ -1,6 +1,22 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+@php
+    $user = auth()->user();
+    $admin = [\App\Enums\Role::Administrateur];
+
+    // [route, motif de la page active, libellé, rôles autorisés (null = tous les rôles)]
+    $menu = [
+        ['carte',                      'carte*',                 'Carte',              null],
+        ['dashboard',                  'dashboard',              'Tableau de bord',    null],
+        ['stocks.index',               'stocks.*',               'Stocks',             null],
+        ['leves.index',                'leves.*',                'Levés',              null],
+        ['admin.utilisateurs.index',   'admin.utilisateurs.*',   'Utilisateurs',       $admin],
+        ['admin.types-materiau.index', 'admin.types-materiau.*', 'Types de matériau',  $admin],
+        ['admin.journal.index',        'admin.journal.*',        "Journal d'activité", $admin],
+    ];
+@endphp
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-phos-nav">
     <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('dashboard') }}">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('carte') }}">
             <span class="rounded px-2 fw-bold text-white" style="background: var(--phos-alerte)">P</span>
             <span class="lh-1">PhosTrack<br><small class="fw-normal opacity-75" style="font-size:.65rem">WebSIG ICS</small></span>
         </a>
@@ -10,37 +26,19 @@
 
         <div class="collapse navbar-collapse" id="menu">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                       href="{{ route('dashboard') }}">Tableau de bord</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('journal.*') ? 'active' : '' }}"
-                       href="{{ route('journal.index') }}">Journal d'activité</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.types-materiau.*') ? 'active' : '' }}"
-                    href="{{ route('admin.types-materiau.index') }}">Types de matériau</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('stocks.*') ? 'active' : '' }}"
-                    href="{{ route('stocks.index') }}">Stocks</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('leves.*') ? 'active' : '' }}"
-                    href="{{ route('leves.index') }}">Levés</a>
-                </li>
-
-                @if (auth()->user()->aLeRole(\App\Enums\Role::Administrateur))
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.utilisateurs.*') ? 'active' : '' }}"
-                           href="{{ route('admin.utilisateurs.index') }}">Utilisateurs</a>
-                    </li>
-                @endif
+                @foreach ($menu as [$route, $motif, $libelle, $roles])
+                    @if ($roles === null || $user->aLeRole(...$roles))
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs($motif) ? 'active' : '' }}"
+                               href="{{ route($route) }}">{{ $libelle }}</a>
+                        </li>
+                    @endif
+                @endforeach
             </ul>
 
-            <span class="navbar-text me-3">
-                {{ auth()->user()->nom_complet }} ({{ auth()->user()->role->libelle() }})
+            <span class="navbar-text lh-sm text-end text-white me-3">
+                <span class="fw-semibold">{{ $user->role->libelle() }}</span><br>
+                <small class="opacity-75">{{ $user->nom_complet }}</small>
             </span>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf

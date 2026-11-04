@@ -23,14 +23,13 @@
                         @enderror
                     </div>
 
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Mot de passe</label>
+                    <div class="input-group">
                         <input id="password" type="password" name="password"
-                               class="form-control @error('password') is-invalid @enderror"
-                               required>
-                        @error('password')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                            class="form-control @error('password') is-invalid @enderror" required>
+                        <button type="button" class="btn btn-outline-secondary" data-voir-mot-de-passe="#password" aria-label="Afficher le mot de passe">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="form-check mb-3">
@@ -38,7 +37,7 @@
                         <label class="form-check-label" for="remember">Se souvenir de moi</label>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">Se connecter</button>
+                    <button type="submit" class="btn btn-primary w-100" data-chargement="Connexion…">Se connecter</button>
                 </form>
             </div>
         </div>

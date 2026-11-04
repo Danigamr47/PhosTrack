@@ -31,7 +31,7 @@ class AuthenticatedSessionController extends Controller
 
     Connexion::ouvrirSession($request->user(), $request);
 
-    return redirect()->intended(route('dashboard', absolute: false));
+    return redirect()->intended(route('carte', absolute: false));
     }
 
     /**
