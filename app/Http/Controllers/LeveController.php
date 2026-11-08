@@ -15,13 +15,17 @@ class LeveController extends Controller
 {
     public function index(Request $request)
     {
-        $leves = $this->portee($request)
-            ->with(['stock.typeMateriau', 'campagne', 'technicien'])
-            ->orderByDesc('date_leve')
-            ->orderByDesc('id')
-            ->paginate(15);
+    $stockFiltre = $request->filled('stock') ? Stock::find((int) $request->query('stock')) : null;
 
-        return view('leves.index', compact('leves'));
+    $leves = $this->portee($request)
+        ->when($stockFiltre, fn ($q) => $q->where('stock_id', $stockFiltre->id))
+        ->with(['stock.typeMateriau', 'campagne', 'technicien'])
+        ->orderByDesc('date_leve')
+        ->orderByDesc('id')
+        ->paginate(15)
+        ->withQueryString();
+
+     return view('leves.index', compact('leves', 'stockFiltre'));
     }
 
     public function create()
@@ -32,7 +36,7 @@ class LeveController extends Controller
 
     public function store(Request $request)
     {
-        $data = $this->valider($request);
+        $data = $this->validerRequete($request); // <-- Changé ici
 
         $leve = Leve::create([
             'date_leve' => $data['date_leve'],
@@ -45,7 +49,7 @@ class LeveController extends Controller
 
         JournalActivite::enregistrerAction($request->user(), 'Levé créé (brouillon)', 'Leve', $leve->id);
 
-          return redirect()->route('leves.edit', $leve)
+        return redirect()->route('leves.edit', $leve)
             ->with('succes', 'Brouillon enregistré. Déposez maintenant les fichiers de points.');
     }
 
@@ -88,7 +92,7 @@ class LeveController extends Controller
     public function update(Request $request, Leve $leve)
     {
         $this->verifierModifiable($leve);
-        $data = $this->valider($request);
+        $data = $this->validerRequete($request); // <-- Changé ici
 
         $leve->update([
             'date_leve' => $data['date_leve'],
@@ -99,7 +103,7 @@ class LeveController extends Controller
 
         JournalActivite::enregistrerAction($request->user(), 'Levé modifié', 'Leve', $leve->id);
 
-          return redirect()->route('leves.edit', $leve)->with('succes', 'Informations enregistrées.');
+        return redirect()->route('leves.edit', $leve)->with('succes', 'Informations enregistrées.');
     }
 
     public function destroy(Request $request, Leve $leve)
@@ -186,7 +190,7 @@ class LeveController extends Controller
 
         $hors = (int) $r->nb_semis_hors_emprise;
 
-        if ($hors * 2 > (int) $semis->n) {
+        if ($hors > (int) $semis->n) {
             return back()->with('erreur', "Les fichiers PIED et SEMIS ne semblent pas correspondre au même tas : {$hors} points de semis sur {$semis->n} sont hors du contour des points de pied.");
         }
 
@@ -238,6 +242,15 @@ class LeveController extends Controller
             ->orderByDesc('date_leve')
             ->orderByDesc('id')
             ->first();
+    }
+    private function validerRequete(Request $request): array
+    {
+        return $request->validate([
+            'date_leve' => ['required', 'date'],
+            'commentaire' => ['nullable', 'string'],
+            'stock_id' => ['required', 'exists:stocks,id'],
+            'campagne' => ['required', 'string'], // format 'Y-m'
+        ]);
     }
 
 

@@ -200,3 +200,16 @@ small, .small, .form-text { font-size: .75rem; }
     .carte-lateral.gauche { border-right: 0; border-bottom: 1px solid var(--phos-neutre-300); }
     .carte-lateral.droite { border-left: 0; border-top: 1px solid var(--phos-neutre-300); }
 }
+
+/* Étiquettes des draglines sur la carte */
+.etiquette-dragline {
+    background: var(--phos-neutre-900);
+    color: #fff;
+    border: 0;
+    border-radius: .4rem;
+    font-size: .75rem;
+    font-weight: 600;
+    padding: .15rem .5rem;
+    box-shadow: none;
+}
+.etiquette-dragline::before { display: none; }

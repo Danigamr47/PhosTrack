@@ -12,7 +12,12 @@
         </a>
     @endif
 </div>
-
+@if ($stockFiltre)
+    <div class="alert alert-info d-flex justify-content-between align-items-center py-2">
+        <span>Historique du stock : <strong>{{ $stockFiltre->nom }}</strong></span>
+        <a href="{{ route('leves.index') }}" class="btn btn-sm btn-outline-primary">Tout afficher</a>
+    </div>
+@endif
 <div class="card shadow-sm"><div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light">

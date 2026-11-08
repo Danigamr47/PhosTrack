@@ -8,9 +8,11 @@
         ['dashboard',                  'dashboard',              'Tableau de bord',    null],
         ['stocks.index',               'stocks.*',               'Stocks',             null],
         ['leves.index',                'leves.*',                'Levés',              null],
+        ['draglines.index', 'draglines.*', 'Draglines', null],
         ['admin.utilisateurs.index',   'admin.utilisateurs.*',   'Utilisateurs',       $admin],
         ['admin.types-materiau.index', 'admin.types-materiau.*', 'Types de matériau',  $admin],
         ['admin.journal.index',        'admin.journal.*',        "Journal d'activité", $admin],
+        
     ];
 @endphp
 
