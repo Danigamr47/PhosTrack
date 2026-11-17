@@ -194,6 +194,10 @@ small, .small, .form-text { font-size: .75rem; }
     width: 14px; height: 14px; border-radius: 3px;
     display: inline-block; vertical-align: middle; border: 1px solid #7B8794;
 }
+.icone-ligne {
+    width: 16px; height: 3px; border-radius: 2px;
+    display: inline-block; vertical-align: middle;
+}
 @media (max-width: 1100px) {
     .carte-page, .carte-page.avec-detail { grid-template-columns: 1fr; height: auto; }
     #carte { height: 60vh; }
@@ -213,3 +217,20 @@ small, .small, .form-text { font-size: .75rem; }
     box-shadow: none;
 }
 .etiquette-dragline::before { display: none; }
+
+/* Bandeau d'alerte de la carte : draglines proches de la limite de leur passe */
+.carte-alertes {
+    position: absolute; top: .75rem; left: 50%; transform: translateX(-50%);
+    z-index: 650; display: flex; flex-direction: column; align-items: center; gap: .4rem;
+    pointer-events: none;
+}
+.alerte-dragline {
+    pointer-events: auto; cursor: pointer;
+    background: var(--phos-accent-100, #FDF2CC); border: 1px solid var(--phos-alerte, #E07B1F); color: #7A3D00;
+    border-radius: .6rem; padding: .35rem .8rem; font-size: .8rem; font-weight: 600;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .25);
+}
+.alerte-dragline::before {
+    content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--phos-alerte, #E07B1F); margin-right: .5rem;
+}

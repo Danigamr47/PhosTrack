@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Models\Connexion;
 use App\Models\JournalActivite;
@@ -15,7 +16,6 @@ class UserController extends Controller
 {
     public function index()
     {
-
         // Utilisateurs actifs dans les 5 dernières minutes (table sessions)
         $enLigne = DB::table('sessions')
             ->whereNotNull('user_id')
@@ -44,7 +44,12 @@ class UserController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $user = User::create($data); JournalActivite::enregistrerAction($request->user(), 'Compte créé', 'Utilisateur', $user->id);
+        // Hachage sécurisé du mot de passe initial
+        $data['password'] = Hash::make($data['password']);
+
+        $user = User::create($data); 
+        
+        JournalActivite::enregistrerAction($request->user(), 'Compte créé', 'Utilisateur', $user->id);
 
         return redirect()->route('admin.utilisateurs.index')->with('succes', 'Compte créé.');
     }
@@ -70,9 +75,15 @@ class UserController extends Controller
 
         if (empty($data['password'])) {
             unset($data['password']); // mot de passe inchangé
+        } else {
+            // Hachage en cas de réinitialisation forcée du mot de passe par l'admin
+            $data['password'] = Hash::make($data['password']);
         }
 
         $user->update($data);
+
+        // Traçabilité de la modification du compte
+        JournalActivite::enregistrerAction($request->user(), 'Compte modifié', 'Utilisateur', $user->id);
 
         return redirect()->route('admin.utilisateurs.index')->with('succes', 'Compte modifié.');
     }
@@ -83,7 +94,7 @@ class UserController extends Controller
             return back()->with('erreur', 'Vous ne pouvez pas désactiver votre propre compte.');
         }
 
-       $user->update(['actif' => ! $user->actif]);
+        $user->update(['actif' => ! $user->actif]);
 
         JournalActivite::enregistrerAction(
             $request->user(),
@@ -93,6 +104,5 @@ class UserController extends Controller
         );
 
         return back()->with('succes', $user->actif ? 'Compte activé.' : 'Compte désactivé.');
-       
     }
 }

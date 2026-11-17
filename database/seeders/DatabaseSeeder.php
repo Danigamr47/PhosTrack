@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use App\Models\Zone;
 use App\Models\TypeMateriau;
+use App\Models\Passes;
+use App\Models\Profils;
 Use App\Models\Dragline;
 
 
@@ -35,5 +37,6 @@ class DatabaseSeeder extends Seeder
         $this->call(ZoneSeeder::class);
         $this->call(TypeMateriauSeeder::class);
         $this->call(DraglineSeeder::class);
+        $this->call(PasseProfilSeeder::class);
     }
 }

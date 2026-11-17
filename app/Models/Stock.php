@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Stock extends Model
@@ -13,5 +14,10 @@ class Stock extends Model
     public function typeMateriau(): BelongsTo
     {
         return $this->belongsTo(TypeMateriau::class, 'type_materiau_id');
+    }
+
+    public function leves(): HasMany
+    {
+        return $this->hasMany(Leve::class, 'stock_id');
     }
 }

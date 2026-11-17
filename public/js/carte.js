@@ -1,7 +1,7 @@
 /**
  * PhosTrack — carte interactive (Leaflet).
  * Dépend de : Leaflet, proj4, Chart.js et de window.PHOSTRACK (défini dans la vue) :
- *   { urlDonnees, urlLeve, urlLeves, urlHistorique, urlDraglines }
+ *   { urlDonnees, urlLeve, urlLeves, urlHistorique, urlDraglines, urlPasses }
  */
 (function () {
     // UTM 28N (EPSG:32628) : coordonnées en mètres, comme sur le terrain et dans la maquette
@@ -12,6 +12,7 @@
     var URL_LEVES = window.PHOSTRACK.urlLeves;
     var URL_HISTORIQUE = window.PHOSTRACK.urlHistorique;
     var URL_DRAGLINES = window.PHOSTRACK.urlDraglines;
+    var URL_PASSES = window.PHOSTRACK.urlPasses;
 
     var COULEURS_MATERIAUX = { 'Phosphate': '#C9A24B', 'Stérile': '#8A7F72', 'Charbon': '#2B2B2E' };
     var COULEUR_PAR_DEFAUT = '#2F7DB5';
@@ -33,6 +34,8 @@
 
     var page = document.querySelector('.carte-page');
     var carte = L.map('carte').setView([15.07, -16.82], 11);
+    carte.createPane('passes').style.zIndex = 405;    // passes et profils : au-dessus des zones
+    carte.createPane('objets').style.zIndex = 410;    // stocks et draglines : au-dessus des passes
 
     /* ------------------------------------------------------------------ */
     /* Fonds de carte, échelle, coordonnées sous le curseur                 */
@@ -211,7 +214,7 @@
         lienLeve.textContent = p.date_leve;
         lienLeve.href = URL_LEVE.replace('__ID__', p.leve_id);
 
-        document.getElementById('d-historique').href = URL_HISTORIQUE + '?stock=' + p.id;
+        document.getElementById('d-historique').href = URL_HISTORIQUE + '?stock_id=' + p.id;
 
         leveExport = p.leve_id;
         majLiensExport();
@@ -279,6 +282,124 @@
     }
 
     /* ------------------------------------------------------------------ */
+    /* Passes et profils (chargés à la demande) + alertes de proximité       */
+    /* ------------------------------------------------------------------ */
+    var ZOOM_MIN_PASSES = 15;   // en dessous, 178 lignes de 3 km forment une surface illisible
+    var STYLE_PASSE = { pane: 'passes', color: '#2A7B63', weight: 3, opacity: 0.55 };
+    var STYLE_PASSE_SURVOL = { weight: 5, opacity: 1 };
+    var STYLE_PROFIL = { pane: 'passes', color: '#D64545', weight: 2, opacity: 0.85 };
+
+    var donneesPasses = null;
+    var passesParNumero = {};
+    var couchePasses = null;
+    var coucheProfils = null;
+    var evidencePasse = null;
+    var jetonEvidence = 0;
+
+    function chargerPasses() {
+        if (donneesPasses) { return Promise.resolve(donneesPasses); }
+
+        return fetch(URL_PASSES, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+            .then(function (reponse) {
+                if (!reponse.ok) { throw new Error('HTTP ' + reponse.status); }
+                return reponse.json();
+            })
+            .then(function (d) {
+                donneesPasses = d;
+                d.passes.features.forEach(function (f) { passesParNumero[f.properties.numero] = f; });
+                return d;
+            });
+    }
+
+    function construireCouchesPasses(d) {
+        if (couchePasses) { return; }
+
+        couchePasses = L.layerGroup();
+        d.passes.features.forEach(function (f) {
+            var ligne = L.geoJSON(f, { style: STYLE_PASSE, pane: 'passes' });
+            ligne.bindTooltip('Passe ' + f.properties.numero, { sticky: true, className: 'etiquette-dragline' });
+            ligne.on('mouseover', function () { ligne.setStyle(STYLE_PASSE_SURVOL); });
+            ligne.on('mouseout', function () { ligne.setStyle(STYLE_PASSE); });
+            couchePasses.addLayer(ligne);
+        });
+
+        coucheProfils = L.layerGroup();
+        d.profils.features.forEach(function (f) {
+            var ligne = L.geoJSON(f, { style: STYLE_PROFIL, pane: 'passes' });
+            ligne.bindTooltip('PF' + f.properties.numero, { sticky: true, className: 'etiquette-dragline' });
+            coucheProfils.addLayer(ligne);
+        });
+    }
+
+    // Case cochée : profils toujours visibles, passes à partir du zoom 15
+    function majPasses() {
+        var coche = document.getElementById('c-passes').checked;
+        document.getElementById('passes-aide').classList.toggle('d-none', !(coche && carte.getZoom() < ZOOM_MIN_PASSES));
+
+        if (!couchePasses) { return; }
+
+        basculer(coucheProfils, coche);
+        basculer(couchePasses, coche && carte.getZoom() >= ZOOM_MIN_PASSES);
+    }
+
+    document.getElementById('c-passes').addEventListener('change', function () {
+        if (!this.checked) { majPasses(); return; }
+
+        chargerPasses()
+            .then(function (d) { construireCouchesPasses(d); majPasses(); })
+            .catch(afficherErreur);
+    });
+
+    carte.on('zoomend', majPasses);
+
+    // La passe de la dragline sélectionnée est mise en évidence, même si la couche est décochée
+    function effacerEvidencePasse() {
+        jetonEvidence++;
+        if (evidencePasse) { carte.removeLayer(evidencePasse); evidencePasse = null; }
+    }
+
+    function mettreEnEvidencePasse(numero) {
+        effacerEvidencePasse();
+        if (numero === null || numero === undefined) { return; }
+
+        var jeton = jetonEvidence;
+        chargerPasses().then(function () {
+            var f = passesParNumero[numero];
+            if (!f || jeton !== jetonEvidence) { return; }
+
+            evidencePasse = L.geoJSON(f, {
+                pane: 'passes', interactive: false,
+                style: { pane: 'passes', color: '#E07B1F', weight: 6, opacity: 0.9 }
+            }).addTo(carte);
+        }).catch(function () { /* pas de mise en évidence si les passes sont indisponibles */ });
+    }
+
+    // Bandeau d'alerte : « MARION approche de la limite de sa passe »
+    function afficherAlertes(alertes) {
+        var zone = document.getElementById('carte-alertes');
+        zone.textContent = '';
+
+        alertes.slice(0, 3).forEach(function (a) {
+            var bouton = document.createElement('button');
+            bouton.type = 'button';
+            bouton.className = 'alerte-dragline';
+            bouton.textContent = a.nom + ' approche de la limite de sa passe (' + nombre(a.limite) + ' m)';
+            bouton.addEventListener('click', function () {
+                carte.flyTo(a.repere.getLatLng(), 17);
+                a.repere.openPopup();
+            });
+            zone.appendChild(bouton);
+        });
+
+        if (alertes.length > 3) {
+            var reste = document.createElement('div');
+            reste.className = 'alerte-dragline';
+            reste.textContent = '+ ' + (alertes.length - 3) + ' autre(s) dragline(s) près de la limite de leur passe';
+            zone.appendChild(reste);
+        }
+    }
+
+    /* ------------------------------------------------------------------ */
     /* Draglines : dernière position + trajectoire en pointillés            */
     /* ------------------------------------------------------------------ */
     function contenuPopupDragline(p) {
@@ -296,14 +417,40 @@
         coord.className = 'text-muted';
         coord.textContent = 'X ' + nombre(p.x) + ' · Y ' + nombre(p.y) + ' (UTM 28N)';
 
+        div.appendChild(titre);
+        div.appendChild(info);
+        div.appendChild(coord);
+
+        // Localisation dans le plan des passes
+        var loc = document.createElement('div');
+        loc.className = 'mt-2';
+
+        if (p.statut === 'normal' || p.statut === 'proche') {
+            var passe = document.createElement('div');
+            passe.className = 'fw-semibold';
+            passe.textContent = 'Passe ' + p.passe + (p.pf_de ? ' · entre PF' + p.pf_de + ' et PF' + p.pf_a : '');
+
+            var limite = document.createElement('div');
+            limite.textContent = 'Distance à la limite : ' + nombre(p.limite) + ' m ';
+
+            var badge = document.createElement('span');
+            badge.className = 'badge ' + (p.statut === 'proche' ? 'text-bg-warning' : 'text-bg-success');
+            badge.textContent = p.statut === 'proche' ? 'Proche de la limite' : 'Normal';
+            limite.appendChild(badge);
+
+            loc.appendChild(passe);
+            loc.appendChild(limite);
+        } else if (p.statut === 'hors_plan') {
+            loc.className = 'mt-2 text-muted';
+            loc.textContent = 'En dehors des passes du plan.';
+        }
+
+        div.appendChild(loc);
+
         var lien = document.createElement('a');
         lien.className = 'd-inline-block mt-2';
         lien.href = URL_DRAGLINES + '?dragline=' + p.id;
         lien.textContent = 'Voir le suivi';
-
-        div.appendChild(titre);
-        div.appendChild(info);
-        div.appendChild(coord);
         div.appendChild(lien);
 
         return div;
@@ -329,6 +476,8 @@
     function afficherDraglines(collection) {
         var groupe = L.layerGroup().addTo(carte);
         var limites = L.featureGroup();
+        var reperes = {};
+        var alertes = [];
 
         collection.features.forEach(function (f) {
             var p = f.properties;
@@ -337,19 +486,25 @@
             if (p.trajectoire) {
                 L.geoJSON({ type: 'Feature', geometry: p.trajectoire, properties: {} }, {
                     style: { color: '#E07B1F', weight: 2.5, dashArray: '6 6', opacity: 0.9 },
-                    interactive: false
+                    interactive: false, pane: 'objets'
                 }).addTo(groupe);
             }
 
             var repere = L.circleMarker([coord[1], coord[0]], {
-                radius: 8, color: '#FFFFFF', weight: 2, fillColor: '#E07B1F', fillOpacity: 1
+                pane: 'objets', radius: 8, color: '#FFFFFF', weight: 2, fillColor: '#E07B1F', fillOpacity: 1
             });
             repere.bindTooltip(etiquetteDragline(p), { direction: 'right', offset: [10, 0], className: 'etiquette-dragline' });
             repere.bindPopup(contenuPopupDragline(p));
+            repere.on('popupopen', function () { mettreEnEvidencePasse(p.passe); });
+            repere.on('popupclose', function () { effacerEvidencePasse(); });
+            reperes[p.id] = repere;
+            if (p.statut === 'proche') { alertes.push({ nom: p.nom, limite: p.limite, repere: repere }); }
             repere.addTo(groupe);
 
             limites.addLayer(repere);
         });
+
+        afficherAlertes(alertes);
 
         document.getElementById('c-draglines').addEventListener('change', function (e) {
             basculer(groupe, e.target.checked);
@@ -393,8 +548,8 @@
             }
 
             // Emprise du tas + repère visible même à petite échelle
-            var polygone = L.geoJSON(f, { style: { color: couleur, weight: 2, fillColor: couleur, fillOpacity: 0.55 } });
-            var repere = L.circleMarker([p.lat, p.lon], { radius: 9, color: '#FFFFFF', weight: 2, fillColor: couleur, fillOpacity: 1 });
+            var polygone = L.geoJSON(f, { pane: 'objets', style: { color: couleur, weight: 2, fillColor: couleur, fillOpacity: 0.55 } });
+            var repere = L.circleMarker([p.lat, p.lon], { pane: 'objets', radius: 9, color: '#FFFFFF', weight: 2, fillColor: couleur, fillOpacity: 1 });
 
             [polygone, repere].forEach(function (couche) {
                 couche.bindTooltip(p.nom, { direction: 'top' });

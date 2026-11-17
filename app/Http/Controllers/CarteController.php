@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Localisation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -26,6 +27,8 @@ class CarteController extends Controller
         SQL);
 
         // Un stock apparaît sur la carte avec l'emprise de son dernier levé VALIDÉ
+        // (ou de son levé validé de la campagne choisie) : enveloppe convexe de ses points de pied,
+        // la même que pour la surface au sol.
         $sqlStocks = <<<'SQL'
             SELECT s.id, s.nom, t.libelle AS type,
                    l.id AS leve_id, l.date_leve, l.volume,
@@ -62,7 +65,7 @@ class CarteController extends Controller
 
         // Draglines : dernière position de chacune + trajectoire (toutes ses positions) quand il y en a plusieurs
         $draglines = DB::select(<<<'SQL'
-            SELECT d.id, d.nom, p.date_mesure, p.x, p.y,
+            SELECT d.id, d.nom, p.id AS position_id, p.date_mesure, p.x, p.y,
                    (SELECT ST_AsGeoJSON(ST_Transform(ST_SetSRID(ST_MakeLine(ST_MakePoint(q.x, q.y) ORDER BY q.date_mesure, q.id), 32628), 4326), 6)
                       FROM position_draglines q
                      WHERE q.dragline_id = d.id
@@ -70,7 +73,7 @@ class CarteController extends Controller
                    ST_AsGeoJSON(ST_Transform(ST_SetSRID(ST_MakePoint(p.x, p.y), 32628), 4326), 6) AS geom
             FROM draglines d
             JOIN LATERAL (
-                SELECT date_mesure, x, y
+                SELECT id, date_mesure, x, y
                 FROM position_draglines
                 WHERE dragline_id = d.id
                 ORDER BY date_mesure DESC, id DESC
@@ -78,6 +81,9 @@ class CarteController extends Controller
             ) p ON true
             ORDER BY d.id
         SQL);
+
+        // Passe, profils encadrants, distance à la limite et statut de la dernière position de chaque dragline
+        $localisations = Localisation::dernieresPositions();
 
         // Campagnes proposées dans le filtre : celles qui ont au moins un levé validé
         $campagnes = DB::table('campagnes')
@@ -89,7 +95,7 @@ class CarteController extends Controller
                 'libelle' => ucfirst(Carbon::create($c->annee, $c->mois, 1)->locale('fr')->translatedFormat('F Y')),
             ])->values();
 
-        // Évolution du volume du plus ancien au plus récent
+        // Évolution du volume : levés validés de chaque stock, du plus ancien au plus récent
         $series = DB::table('leves')
             ->join('campagnes', 'campagnes.id', '=', 'leves.campagne_id')
             ->where('leves.statut', 'valide')
@@ -115,6 +121,11 @@ class CarteController extends Controller
                 'x' => (float) $d->x,
                 'y' => (float) $d->y,
                 'trajectoire' => $d->trajectoire ? json_decode($d->trajectoire, true) : null,
+                'passe' => $localisations[$d->position_id]->passe ?? null,
+                'pf_de' => $localisations[$d->position_id]->pf_de ?? null,
+                'pf_a' => $localisations[$d->position_id]->pf_a ?? null,
+                'limite' => $localisations[$d->position_id]->limite ?? null,
+                'statut' => $localisations[$d->position_id]->statut ?? 'inconnu',
             ]),
             'stocks' => $this->collection($stocks, fn ($s) => [
                 'id' => $s->id,
@@ -130,6 +141,28 @@ class CarteController extends Controller
                 'evolution' => $this->evolution($series->get($s->id, collect()), (int) $s->leve_id),
             ]),
         ]);
+    }
+
+    /** Passes et profils du plan au format GeoJSON (WGS84). Chargés à la demande par la carte. */
+    public function passes(): JsonResponse
+    {
+        $passes = DB::select(
+            'SELECT numero, bloc, etiquette_plan, ST_AsGeoJSON(ST_Transform(geom, 4326), 6) AS geom FROM passes ORDER BY numero'
+        );
+        $profils = DB::select(
+            'SELECT numero, ST_AsGeoJSON(ST_Transform(geom, 4326), 6) AS geom FROM profils ORDER BY numero'
+        );
+
+        return response()->json([
+            'passes' => $this->collection($passes, fn ($p) => [
+                'numero' => (int) $p->numero,
+                'bloc' => $p->bloc,
+                'etiquette_plan' => (bool) $p->etiquette_plan,
+            ]),
+            'profils' => $this->collection($profils, fn ($f) => [
+                'numero' => (int) $f->numero,
+            ]),
+        ])->header('Cache-Control', 'private, max-age=3600');
     }
 
     /**

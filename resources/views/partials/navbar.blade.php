@@ -1,18 +1,19 @@
 @php
     $user = auth()->user();
     $admin = [\App\Enums\Role::Administrateur];
+    $gestion = [\App\Enums\Role::Administrateur, \App\Enums\Role::Technicien];
 
     // [route, motif de la page active, libellé, rôles autorisés (null = tous les rôles)]
     $menu = [
         ['carte',                      'carte*',                 'Carte',              null],
         ['dashboard',                  'dashboard',              'Tableau de bord',    null],
-        ['stocks.index',               'stocks.*',               'Stocks',             null],
-        ['leves.index',                'leves.*',                'Levés',              null],
-        ['draglines.index', 'draglines.*', 'Draglines', null],
+        ['stocks.index',               'stocks.*',               'Stocks',             $gestion],
+        ['leves.index',                'leves.*',                'Levés',              $gestion],
+        ['draglines.index',            'draglines.*',            'Draglines',          null],
+        ['historique.index',           'historique.*',           'Historique',         null],
         ['admin.utilisateurs.index',   'admin.utilisateurs.*',   'Utilisateurs',       $admin],
         ['admin.types-materiau.index', 'admin.types-materiau.*', 'Types de matériau',  $admin],
         ['admin.journal.index',        'admin.journal.*',        "Journal d'activité", $admin],
-        
     ];
 @endphp
 
@@ -38,10 +39,17 @@
                 @endforeach
             </ul>
 
-            <span class="navbar-text lh-sm text-end text-white me-3">
-                <span class="fw-semibold">{{ $user->role->libelle() }}</span><br>
-                <small class="opacity-75">{{ $user->nom_complet }}</small>
-            </span>
+            {{-- Lien vers Mon Profil sur l'identité de l'utilisateur --}}
+            <a href="{{ route('profile.edit') }}"
+               class="navbar-text lh-sm text-end text-white text-decoration-none me-3 d-flex align-items-center gap-2 {{ request()->routeIs('profile.*') ? 'border-bottom border-white pb-1' : '' }}"
+               title="Gérer mon profil et mon mot de passe">
+                <div>
+                    <span class="fw-semibold">{{ $user->role->libelle() }}</span><br>
+                    <small class="opacity-75">{{ $user->nom_complet }}</small>
+                </div>
+                <i class="bi bi-person-circle fs-5 opacity-75"></i>
+            </a>
+
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button class="btn btn-outline-light btn-sm">Déconnexion</button>
